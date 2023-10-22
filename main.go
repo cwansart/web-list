@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
+
+type templData struct {
+	Dir   string
+	Files []string
+}
 
 // checks program args and uses the first argument as working dir
 // if no argument is set, use the current dir
@@ -68,8 +74,16 @@ func main() {
 			log.Fatalf("failed to get files: %v\n", err)
 		}
 
-		l := list(d, f)
-		l.Render(r.Context(), w)
+		tf := "list.html"
+		t, err := template.New("tf").ParseFiles(tf)
+		if err != nil {
+			log.Fatalf("failed to parse template: %v\n", err)
+		}
+
+		err = t.ExecuteTemplate(w, tf, templData{Dir: d, Files: f})
+		if err != nil {
+			log.Fatalf("failed to execute template: %v\n", err)
+		}
 	}))
 
 	fmt.Println("listening on http://localhost:3000")
